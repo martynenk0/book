@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Подбор книг — Книжный магазин</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --surface: #ffffff;
+      --text: #1a1d23;
+      --text-secondary: #5c6370;
+      --accent: #2d6a4f;
+      --accent-hover: #1b4332;
+      --accent-light: #d8f3dc;
+      --border: #e4e7ec;
+      --shadow: 0 4px 20px rgba(0,0,0,0.06);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.1);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+      min-height: 100vh;
+      padding: 40px 0 60px;
+      animation: fadeIn 0.4s ease;
+    }
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header / Progress */
+    .progress-bar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    .progress-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .progress-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .progress-track {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    /* Start Screen */
+    .start-hero {
+      text-align: center;
+      padding: 80px 0 40px;
+    }
+    .start-hero h1 {
+      font-size: clamp(28px, 5vw, 42px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    .start-hero p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 480px;
+      margin: 0 auto 36px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(45, 106, 79, 0.35);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(45, 106, 79, 0.4);
+    }
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 1.5px solid var(--accent);
+    }
+    .btn-outline:hover {
+      background: var(--accent-light);
+    }
+    .btn-sm {
+      padding: 10px 18px;
+      font-size: 14px;
+    }
+    .btn-block {
+      width: 100%;
+    }
+
+    .start-info {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-top: 48px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .start-info-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--accent-light);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 22px;
+    }
+    .start-info h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .start-info p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    /* Quiz */
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 36px;
+      padding-top: 20px;
+    }
+    .quiz-header h2 {
+      font-size: clamp(22px, 4vw, 28px);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+    }
+    .quiz-header .hint {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    .option-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-align: center;
+      font-size: 15px;
+      font-weight: 500;
+      user-select: none;
+      position: relative;
+    }
+    .option-card:hover {
+      border-color: #a8d5c0;
+      background: #f0faf5;
+    }
+    .option-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent-hover);
+    }
+    .option-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .quiz-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .quiz-nav .btn {
+      min-width: 140px;
+    }
+
+    /* Loading */
+    .loading-screen {
+      display: none;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 40px;
+    }
+    .loading-screen.active {
+      display: flex;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 24px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-screen p {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* Results */
+    .results-header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-top: 12px;
+    }
+    .results-header h2 {
+      font-size: clamp(22px, 4vw, 28px);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .results-header p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .results-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding: 16px 20px;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .sort-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .sort-group label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .sort-select {
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: var(--bg);
+      cursor: pointer;
+      outline: none;
+    }
+    .sort-select:focus {
+      border-color: var(--accent);
+    }
+
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .book-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: all var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+    .book-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-3px);
+    }
+
+    .book-cover-wrap {
+      position: relative;
+      height: 200px;
+      background: linear-gradient(135deg, #e8f0ee 0%, #d4e5dc 100%);
+      overflow: hidden;
+    }
+    .book-cover {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .book-cover-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--accent-hover);
+      line-height: 1.3;
+    }
+    .match-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .book-body {
+      padding: 18px 20px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .book-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .book-author {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+    .book-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text-secondary);
+    }
+    .tag.genre {
+      background: var(--accent-light);
+      color: var(--accent-hover);
+    }
+    .book-price {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .book-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .book-why {
+      font-size: 13px;
+      background: #f0faf5;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      color: var(--accent-hover);
+      line-height: 1.4;
+    }
+    .book-why strong {
+      font-weight: 600;
+    }
+    .book-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .book-actions .btn {
+      flex: 1;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      max-width: 520px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px 0;
+    }
+    .modal-header h3 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--bg);
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+    }
+    .modal-close:hover {
+      background: var(--border);
+      color: var(--text);
+    }
+    .modal-body {
+      padding: 20px 24px 28px;
+    }
+
+    /* Detail modal */
+    .detail-cover {
+      width: 140px;
+      height: 200px;
+      border-radius: 8px;
+      object-fit: cover;
+      margin: 0 auto 20px;
+      display: block;
+      box-shadow: var(--shadow);
+      background: linear-gradient(135deg, #e8f0ee, #d4e5dc);
+    }
+    .detail-cover-fallback {
+      width: 140px;
+      height: 200px;
+      border-radius: 8px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--accent-hover);
+      background: linear-gradient(135deg, #e8f0ee, #d4e5dc);
+      box-shadow: var(--shadow);
+    }
+    .detail-title {
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .detail-author {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+    .detail-price {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .detail-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .detail-rating {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+    .detail-rating span {
+      color: #e6a817;
+      font-weight: 600;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color var(--transition);
+      background: var(--bg);
+    }
+    .form-group input:focus {
+      border-color: var(--accent);
+    }
+    .form-group input[readonly] {
+      background: #f0f0f0;
+      color: var(--text-secondary);
+    }
+    .form-success {
+      text-align: center;
+      padding: 20px 0;
+    }
+    .form-success-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--accent-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 28px;
+      color: var(--accent);
+    }
+    .form-success h4 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .form-success p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    /* Empty state */
+    .empty-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .start-hero {
+        padding: 50px 0 30px;
+      }
+      .start-info {
+        flex-direction: column;
+        padding: 22px;
+      }
+      .options-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .quiz-nav {
+        flex-direction: column-reverse;
+      }
+      .quiz-nav .btn {
+        width: 100%;
+      }
+      .results-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .books-grid {
+        grid-template-columns: 1fr;
+      }
+      .book-actions {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Progress (visible during quiz) -->
+  <div class="progress-bar" id="progressBar" style="display:none;">
+    <div class="progress-inner">
+      <span class="progress-text" id="progressText">1 из 5</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:20%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- START SCREEN -->
+  <section class="screen active" id="screenStart">
+    <div class="container">
+      <div class="start-hero">
+        <h1>Подберем книгу именно для вас</h1>
+        <p>Ответьте на несколько вопросов, и мы покажем подходящие варианты</p>
+        <button class="btn btn-primary" id="btnStart" style="font-size:17px;padding:16px 36px;">Начать подбор</button>
+      </div>
+      <div class="start-info">
+        <div class="start-info-icon">📚</div>
+        <div>
+          <h3>Не знаете, что выбрать?</h3>
+          <p>Подберем книгу под ваши интересы, возраст и бюджет за пару минут.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section class="screen" id="screenQuiz">
+    <div class="container">
+      <div class="quiz-header">
+        <h2 id="quizTitle"></h2>
+        <p class="hint" id="quizHint"></p>
+      </div>
+      <div class="options-grid" id="optionsGrid"></div>
+      <div class="quiz-nav">
+        <button class="btn btn-secondary" id="btnBack">Назад</button>
+        <button class="btn btn-primary" id="btnNext">Далее</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOADING -->
+  <div class="loading-screen" id="screenLoading">
+    <div class="spinner"></div>
+    <p>Подбираем книги для вас...</p>
+  </div>
+
+  <!-- RESULTS -->
+  <section class="screen" id="screenResults">
+    <div class="container">
+      <div class="results-header">
+        <h2>Мы подобрали для вас</h2>
+        <p id="resultsCount"></p>
+      </div>
+      <div class="results-toolbar">
+        <div class="sort-group">
+          <label for="sortSelect">Сортировка:</label>
+          <select class="sort-select" id="sortSelect">
+            <option value="match">По соответствию</option>
+            <option value="price-asc">Сначала дешевле</option>
+            <option value="price-desc">Сначала дороже</option>
+          </select>
+        </div>
+        <button class="btn btn-outline btn-sm" id="btnRestart">Изменить параметры</button>
+      </div>
+      <div class="books-grid" id="booksGrid"></div>
+    </div>
+  </section>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>О книге</h3>
+        <button class="modal-close" data-close="detailModal">&times;</button>
+      </div>
+      <div class="modal-body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <!-- REQUEST MODAL -->
+  <div class="modal-overlay" id="requestModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="requestModalTitle">Оставить заявку</h3>
+        <button class="modal-close" data-close="requestModal">&times;</button>
+      </div>
+      <div class="modal-body" id="requestBody">
+        <form id="requestForm">
+          <div class="form-group">
+            <label for="reqName">Имя</label>
+            <input type="text" id="reqName" placeholder="Как к вам обращаться?" required>
+          </div>
+          <div class="form-group">
+            <label for="reqPhone">Телефон</label>
+            <input type="tel" id="reqPhone" placeholder="+7 (___) ___-__-__" required>
+          </div>
+          <div class="form-group">
+            <label for="reqBook">Выбранная книга</label>
+            <input type="text" id="reqBook" readonly>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top:8px;">Отправить заявку</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== BOOK DATABASE ==========
+    const books = [
+      {
+        id: 1,
+        title: "Гарри Поттер и философский камень",
+        author: "Дж. К. Роулинг",
+        genres: ["Фэнтези"],
+        ages: ["6-12", "13-17"],
+        interests: ["Приключения", "Тайны и расследования"],
+        price: 890,
+        rating: 4.9,
+        description: "История о мальчике, который узнаёт, что он волшебник, и отправляется в школу Хогвартс.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785353003137-L.jpg",
+        forWhom: ["self", "child", "teen"]
+      },
+      {
+        id: 2,
+        title: "Властелин колец: Братство Кольца",
+        author: "Дж. Р. Р. Толкин",
+        genres: ["Фэнтези"],
+        ages: ["13-17", "18-25", "26-40", "40+"],
+        interests: ["Приключения"],
+        price: 1290,
+        rating: 4.8,
+        description: "Эпическое путешествие Frodo и его друзей, чтобы уничтожить Кольцо Всевластья.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170929603-L.jpg",
+        forWhom: ["self", "teen", "adult"]
+      },
+      {
+        id: 3,
+        title: "1984",
+        author: "Джордж Оруэлл",
+        genres: ["Фантастика"],
+        ages: ["18-25", "26-40", "40+"],
+        interests: ["Наука", "Эмоции и отношения"],
+        price: 650,
+        rating: 4.7,
+        description: "Антиутопия о тоталитарном обществе, где Большой Брат следит за каждым.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170813254-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 4,
+        title: "Мастер и Маргарита",
+        author: "Михаил Булгаков",
+        genres: ["Фантастика", "Роман"],
+        ages: ["18-25", "26-40", "40+"],
+        interests: ["Любовь", "Тайны и расследования"],
+        price: 720,
+        rating: 4.9,
+        description: "Философский роман о добре и зле, любви и предательстве в Москве 1930-х.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170878857-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 5,
+        title: "Убийство в «Восточном экспрессе»",
+        author: "Агата Кристи",
+        genres: ["Детектив"],
+        ages: ["13-17", "18-25", "26-40", "40+"],
+        interests: ["Тайны и расследования"],
+        price: 580,
+        rating: 4.6,
+        description: "Эркюль Пуаро расследует убийство в застрявшем в снегах поезде.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170908121-L.jpg",
+        forWhom: ["self", "teen", "adult"]
+      },
+      {
+        id: 6,
+        title: "Гордость и предубеждение",
+        author: "Джейн Остин",
+        genres: ["Роман"],
+        ages: ["18-25", "26-40", "40+"],
+        interests: ["Любовь", "Эмоции и отношения"],
+        price: 540,
+        rating: 4.7,
+        description: "Классический роман о любви, предрассудках и социальных условностях.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785171123456-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 7,
+        title: "Атомные привычки",
+        author: "Джеймс Клир",
+        genres: ["Саморазвитие", "Психология"],
+        ages: ["18-25", "26-40", "40+"],
+        interests: ["Саморазвитие"],
+        price: 890,
+        rating: 4.8,
+        description: "Как маленькие изменения приводят к выдающимся результатам.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785001467890-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 8,
+        title: "Богатый папа, бедный папа",
+        author: "Роберт Кийосаки",
+        genres: ["Бизнес", "Саморазвитие"],
+        ages: ["18-25", "26-40", "40+"],
+        interests: ["Деньги и бизнес", "Саморазвитие"],
+        price: 750,
+        rating: 4.5,
+        description: "Финансовая грамотность и мышление богатого человека.",
+        cover: "https://covers.openlibrary.org/b/isbn/9789851532342-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 9,
+        title: "Sapiens: Краткая история человечества",
+        author: "Юваль Ной Харари",
+        genres: ["История", "Саморазвитие"],
+        ages: ["18-25", "26-40", "40+"],
+        interests: ["История", "Наука"],
+        price: 1100,
+        rating: 4.7,
+        description: "От когнитивной революции до наших дней — путь Homo sapiens.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785171023362-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 10,
+        title: "Маленький принц",
+        author: "Антуан де Сент-Экзюпери",
+        genres: ["Фэнтези", "Роман"],
+        ages: ["6-12", "13-17", "18-25"],
+        interests: ["Приключения", "Эмоции и отношения"],
+        price: 450,
+        rating: 4.9,
+        description: "Философская сказка о дружбе, любви и смысле жизни.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170901234-L.jpg",
+        forWhom: ["self", "child", "teen", "adult"]
+      },
+      {
+        id: 11,
+        title: "Дюна",
+        author: "Фрэнк Герберт",
+        genres: ["Фантастика"],
+        ages: ["18-25", "26-40", "40+"],
+        interests: ["Приключения", "Наука"],
+        price: 1450,
+        rating: 4.8,
+        description: "Эпическая сага о пустынной планете Арракис и борьбе за контроль над спайсом.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785171128901-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 12,
+        title: "Девушка с татуировкой дракона",
+        author: "Стиг Ларссон",
+        genres: ["Детектив"],
+        ages: ["18-25", "26-40", "40+"],
+        interests: ["Тайны и расследования"],
+        price: 820,
+        rating: 4.6,
+        description: "Журналист и хакерша расследуют исчезновение, произошедшее десятилетия назад.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170801234-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 13,
+        title: "Тонкое искусство пофигизма",
+        author: "Марк Мэнсон",
+        genres: ["Психология", "Саморазвитие"],
+        ages: ["18-25", "26-40"],
+        interests: ["Саморазвитие", "Эмоции и отношения"],
+        price: 690,
+        rating: 4.5,
+        description: "Парадоксальный подход к хорошей жизни: меньше стараться и выбирать важное.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785001002345-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 14,
+        title: "Игра престолов",
+        author: "Джордж Р. Р. Мартин",
+        genres: ["Фэнтези"],
+        ages: ["18-25", "26-40", "40+"],
+        interests: ["Приключения", "Тайны и расследования"],
+        price: 1350,
+        rating: 4.7,
+        description: "Эпическая битва за Железный трон в мире Семи Королевств.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170905678-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 15,
+        title: "Психология влияния",
+        author: "Роберт Чалдини",
+        genres: ["Психология", "Бизнес"],
+        ages: ["26-40", "40+"],
+        interests: ["Саморазвитие", "Деньги и бизнес"],
+        price: 980,
+        rating: 4.6,
+        description: "Классика о принципах убеждения и влиянии на людей.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785001460123-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 16,
+        title: "Хоббит, или Туда и обратно",
+        author: "Дж. Р. Р. Толкин",
+        genres: ["Фэнтези"],
+        ages: ["6-12", "13-17", "18-25"],
+        interests: ["Приключения"],
+        price: 780,
+        rating: 4.8,
+        description: "Приключения Бильбо Бэггинса в поисках сокровищ дракона Смауга.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170923456-L.jpg",
+        forWhom: ["self", "child", "teen"]
+      },
+      {
+        id: 17,
+        title: "Краткая история времени",
+        author: "Стивен Хокинг",
+        genres: ["Наука", "Саморазвитие"],
+        ages: ["18-25", "26-40", "40+"],
+        interests: ["Наука"],
+        price: 920,
+        rating: 4.5,
+        description: "От Большого взрыва до чёрных дыр — доступно о Вселенной.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170809876-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 18,
+        title: "Анна Каренина",
+        author: "Лев Толстой",
+        genres: ["Роман"],
+        ages: ["26-40", "40+"],
+        interests: ["Любовь", "Эмоции и отношения"],
+        price: 680,
+        rating: 4.8,
+        description: "Великий роман о любви, семье и обществе в России XIX века.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170876543-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 19,
+        title: "Думай медленно... решай быстро",
+        author: "Даниэль Канеман",
+        genres: ["Психология", "Саморазвитие"],
+        ages: ["26-40", "40+"],
+        interests: ["Саморазвитие", "Наука"],
+        price: 1150,
+        rating: 4.7,
+        description: "Нобелевский лауреат о двух системах мышления и принятии решений.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785001005678-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 20,
+        title: "Шерлок Холмс: Собрание рассказов",
+        author: "Артур Конан Дойл",
+        genres: ["Детектив"],
+        ages: ["13-17", "18-25", "26-40", "40+"],
+        interests: ["Тайны и расследования"],
+        price: 990,
+        rating: 4.9,
+        description: "Классические расследования величайшего сыщика всех времён.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170902345-L.jpg",
+        forWhom: ["self", "teen", "adult"]
+      },
+      {
+        id: 21,
+        title: "Алиса в Стране чудес",
+        author: "Льюис Кэрролл",
+        genres: ["Фэнтези"],
+        ages: ["6-12", "13-17"],
+        interests: ["Приключения"],
+        price: 420,
+        rating: 4.7,
+        description: "Необыкновенные приключения девочки в фантастическом мире.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170901111-L.jpg",
+        forWhom: ["child", "teen"]
+      },
+      {
+        id: 22,
+        title: "От нуля к единице",
+        author: "Питер Тиль",
+        genres: ["Бизнес"],
+        ages: ["18-25", "26-40"],
+        interests: ["Деньги и бизнес", "Саморазвитие"],
+        price: 850,
+        rating: 4.4,
+        description: "Как создать будущее и построить успешный стартап.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785001463456-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 23,
+        title: "Цветы для Элджернона",
+        author: "Дэниел Киз",
+        genres: ["Фантастика", "Роман"],
+        ages: ["18-25", "26-40"],
+        interests: ["Наука", "Эмоции и отношения"],
+        price: 610,
+        rating: 4.8,
+        description: "Трогательная история о человеке, чей интеллект резко вырос после эксперимента.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170811111-L.jpg",
+        forWhom: ["self", "adult"]
+      },
+      {
+        id: 24,
+        title: "Война и мир",
+        author: "Лев Толстой",
+        genres: ["История", "Роман"],
+        ages: ["26-40", "40+"],
+        interests: ["История", "Эмоции и отношения"],
+        price: 1250,
+        rating: 4.9,
+        description: "Эпический роман о судьбах людей на фоне наполеоновских войн.",
+        cover: "https://covers.openlibrary.org/b/isbn/9785170872222-L.jpg",
+        forWhom: ["self", "adult"]
+      }
+    ];
+
+    // ========== QUIZ STEPS ==========
+    const steps = [
+      {
+        title: "Для кого выбираете книгу?",
+        hint: "Выберите один вариант",
+        multi: false,
+        key: "forWhom",
+        options: [
+          { value: "self", label: "Для себя" },
+          { value: "child", label: "В подарок ребенку" },
+          { value: "teen", label: "В подарок подростку" },
+          { value: "adult", label: "В подарок взрослому" }
+        ]
+      },
+      {
+        title: "Какой жанр интересует?",
+        hint: "Можно выбрать несколько",
+        multi: true,
+        key: "genres",
+        options: [
+          { value: "Фэнтези", label: "Фэнтези" },
+          { value: "Фантастика", label: "Фантастика" },
+          { value: "Детектив", label: "Детектив" },
+          { value: "Роман", label: "Роман" },
+          { value: "Психология", label: "Психология" },
+          { value: "Бизнес", label: "Бизнес" },
+          { value: "Саморазвитие", label: "Саморазвитие" },
+          { value: "История", label: "История" }
+        ]
+      },
+      {
+        title: "Какой возраст?",
+        hint: "Выберите один вариант",
+        multi: false,
+        key: "age",
+        options: [
+          { value: "6-12", label: "6–12" },
+          { value: "13-17", label: "13–17" },
+          { value: "18-25", label: "18–25" },
+          { value: "26-40", label: "26–40" },
+          { value: "40+", label: "40+" }
+        ]
+      },
+      {
+        title: "Что вам интересно?",
+        hint: "Можно выбрать несколько",
+        multi: true,
+        key: "interests",
+        options: [
+          { value: "Приключения", label: "Приключения" },
+          { value: "Любовь", label: "Любовь" },
+          { value: "Тайны и расследования", label: "Тайны и расследования" },
+          { value: "Саморазвитие", label: "Саморазвитие" },
+          { value: "Деньги и бизнес", label: "Деньги и бизнес" },
+          { value: "Наука", label: "Наука" },
+          { value: "История", label: "История" },
+          { value: "Эмоции и отношения", label: "Эмоции и отношения" }
+        ]
+      },
+      {
+        title: "Какой бюджет?",
+        hint: "Выберите один вариант",
+        multi: false,
+        key: "budget",
+        options: [
+          { value: "0-1000", label: "До 1000 ₽" },
+          { value: "1000-2000", label: "1000–2000 ₽" },
+          { value: "2000-3000", label: "2000–3000 ₽" },
+          { value: "3000+", label: "От 3000 ₽" }
+        ]
+      }
+    ];
+
+    // ========== STATE ==========
+    let currentStep = 0;
+    let answers = {
+      forWhom: null,
+      genres: [],
+      age: null,
+      interests: [],
+      budget: null
+    };
+    let results = [];
+    let selectedBookId = null;
+
+    // ========== DOM ==========
+    const screenStart = document.getElementById('screenStart');
+    const screenQuiz = document.getElementById('screenQuiz');
+    const screenLoading = document.getElementById('screenLoading');
+    const screenResults = document.getElementById('screenResults');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+    const quizTitle = document.getElementById('quizTitle');
+    const quizHint = document.getElementById('quizHint');
+    const optionsGrid = document.getElementById('optionsGrid');
+    const btnStart = document.getElementById('btnStart');
+    const btnBack = document.getElementById('btnBack');
+    const btnNext = document.getElementById('btnNext');
+    const btnRestart = document.getElementById('btnRestart');
+    const booksGrid = document.getElementById('booksGrid');
+    const sortSelect = document.getElementById('sortSelect');
+    const resultsCount = document.getElementById('resultsCount');
+    const detailModal = document.getElementById('detailModal');
+    const detailBody = document.getElementById('detailBody');
+    const requestModal = document.getElementById('requestModal');
+    const requestBody = document.getElementById('requestBody');
+    const requestForm = document.getElementById('requestForm');
+    const reqName = document.getElementById('reqName');
+    const reqPhone = document.getElementById('reqPhone');
+    const reqBook = document.getElementById('reqBook');
+    const requestModalTitle = document.getElementById('requestModalTitle');
+
+    // ========== HELPERS ==========
+    function showScreen(name) {
+      screenStart.classList.remove('active');
+      screenQuiz.classList.remove('active');
+      screenLoading.classList.remove('active');
+      screenResults.classList.remove('active');
+      progressBar.style.display = 'none';
+
+      if (name === 'start') {
+        screenStart.classList.add('active');
+      } else if (name === 'quiz') {
+        screenQuiz.classList.add('active');
+        progressBar.style.display = 'block';
+      } else if (name === 'loading') {
+        screenLoading.classList.add('active');
+      } else if (name === 'results') {
+        screenResults.classList.add('active');
+      }
+    }
+
+    function updateProgress() {
+      const total = steps.length;
+      const current = currentStep + 1;
+      progressText.textContent = `${current} из ${total}`;
+      progressFill.style.width = `${(current / total) * 100}%`;
+    }
+
+    function renderStep() {
+      const step = steps[currentStep];
+      quizTitle.textContent = step.title;
+      quizHint.textContent = step.hint;
+      optionsGrid.innerHTML = '';
+
+      step.options.forEach(opt => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.textContent = opt.label;
+        card.dataset.value = opt.value;
+
+        const selected = step.multi
+          ? answers[step.key].includes(opt.value)
+          : answers[step.key] === opt.value;
+        if (selected) card.classList.add('selected');
+
+        card.addEventListener('click', () => {
+          if (step.multi) {
+            const idx = answers[step.key].indexOf(opt.value);
+            if (idx > -1) {
+              answers[step.key].splice(idx, 1);
+              card.classList.remove('selected');
+            } else {
+              answers[step.key].push(opt.value);
+              card.classList.add('selected');
+            }
+          } else {
+            answers[step.key] = opt.value;
+            optionsGrid.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+          }
+          updateNextBtn();
+        });
+
+        optionsGrid.appendChild(card);
+      });
+
+      btnBack.style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+      btnNext.textContent = currentStep === steps.length - 1 ? 'Подобрать книги' : 'Далее';
+      updateNextBtn();
+      updateProgress();
+    }
+
+    function updateNextBtn() {
+      const step = steps[currentStep];
+      let valid = false;
+      if (step.multi) {
+        valid = answers[step.key].length > 0;
+      } else {
+        valid = answers[step.key] !== null;
+      }
+      btnNext.disabled = !valid;
+      btnNext.style.opacity = valid ? '1' : '0.5';
+      btnNext.style.cursor = valid ? 'pointer' : 'not-allowed';
+    }
+
+    // ========== SCORING ==========
+    function scoreBook(book) {
+      let score = 0;
+      let reasons = [];
+      const maxScore = 100;
+
+      // Genre match (up to 30)
+      if (answers.genres.length > 0) {
+        const genreMatches = book.genres.filter(g => answers.genres.includes(g)).length;
+        if (genreMatches > 0) {
+          const genreScore = Math.min(30, (genreMatches / answers.genres.length) * 30 + 10);
+          score += genreScore;
+          reasons.push(`жанр «${book.genres.filter(g => answers.genres.includes(g)).join(', ')}»`);
+        }
+      } else {
+        score += 10;
+      }
+
+      // Age match (up to 25)
+      if (answers.age && book.ages.includes(answers.age)) {
+        score += 25;
+        reasons.push(`возраст ${answers.age}`);
+      } else if (answers.age) {
+        // partial: nearby ages
+        const ageOrder = ["6-12", "13-17", "18-25", "26-40", "40+"];
+        const userIdx = ageOrder.indexOf(answers.age);
+        const bookIdxs = book.ages.map(a => ageOrder.indexOf(a));
+        const minDist = Math.min(...bookIdxs.map(i => Math.abs(i - userIdx)));
+        if (minDist === 1) score += 12;
+      }
+
+      // Interests match (up to 25)
+      if (answers.interests.length > 0) {
+        const interestMatches = book.interests.filter(i => answers.interests.includes(i)).length;
+        if (interestMatches > 0) {
+          const intScore = Math.min(25, (interestMatches / Math.max(answers.interests.length, 1)) * 25 + 5);
+          score += intScore;
+          reasons.push(interestMatches === 1
+            ? `интерес «${book.interests.find(i => answers.interests.includes(i))}»`
+            : `интересы (${interestMatches})`);
+        }
+      } else {
+        score += 8;
+      }
+
+      // Budget match (up to 15)
+      if (answers.budget) {
+        const [minStr, maxStr] = answers.budget.split('-');
+        let inBudget = false;
+        if (answers.budget === '3000+') {
+          inBudget = book.price >= 3000;
+          if (book.price >= 2000) score += 8;
+          if (inBudget) score += 15;
+        } else {
+          const min = parseInt(minStr) || 0;
+          const max = parseInt(maxStr) || 99999;
+          if (book.price >= min && book.price <= max) {
+            score += 15;
+            inBudget = true;
+          } else if (book.price < min && book.price >= min - 400) {
+            score += 8;
+          } else if (book.price > max && book.price <= max + 500) {
+            score += 6;
+          }
+        }
+        if (inBudget) reasons.push('ваш бюджет');
+      }
+
+      // For whom (up to 10)
+      if (answers.forWhom && book.forWhom.includes(answers.forWhom)) {
+        score += 10;
+      } else if (answers.forWhom === 'self') {
+        score += 5;
+      }
+
+      // Rating bonus (up to 5)
+      score += (book.rating - 4) * 5;
+
+      score = Math.min(98, Math.max(35, Math.round(score)));
+
+      let why = '';
+      if (reasons.length > 0) {
+        why = 'Совпадает: ' + reasons.slice(0, 3).join(', ') + '.';
+      } else {
+        why = 'Хороший выбор по рейтингу и популярности.';
+      }
+
+      return { score, why };
+    }
+
+    function calculateResults() {
+      const scored = books.map(book => {
+        const { score, why } = scoreBook(book);
+        return { ...book, match: score, why };
+      });
+
+      scored.sort((a, b) => b.match - a.match);
+      // Take top 6 with match >= 45, or at least top 3
+      let filtered = scored.filter(b => b.match >= 45);
+      if (filtered.length < 3) filtered = scored.slice(0, 4);
+      else if (filtered.length > 6) filtered = filtered.slice(0, 6);
+
+      results = filtered;
+    }
+
+    function formatPrice(p) {
+      return p.toLocaleString('ru-RU') + ' ₽';
+    }
+
+    function renderCover(book, className, fallbackClass) {
+      if (book.cover) {
+        return `<img class="${className}" src="${book.cover}" alt="${book.title}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="${fallbackClass}" style="display:none;">${book.title}</div>`;
+      }
+      return `<div class="${fallbackClass}">${book.title}</div>`;
+    }
+
+    function renderResults() {
+      const sorted = [...results];
+      const sortVal = sortSelect.value;
+      if (sortVal === 'price-asc') sorted.sort((a, b) => a.price - b.price);
+      else if (sortVal === 'price-desc') sorted.sort((a, b) => b.price - a.price);
+      else sorted.sort((a, b) => b.match - a.match);
+
+      resultsCount.textContent = `Найдено ${sorted.length} ${pluralBooks(sorted.length)}`;
+
+      booksGrid.innerHTML = sorted.map(book => `
+        <article class="book-card" data-id="${book.id}">
+          <div class="book-cover-wrap">
+            ${renderCover(book, 'book-cover', 'book-cover-fallback')}
+            <span class="match-badge">Подходит на ${book.match}%</span>
+          </div>
+          <div class="book-body">
+            <h3 class="book-title">${book.title}</h3>
+            <p class="book-author">${book.author}</p>
+            <div class="book-meta">
+              ${book.genres.map(g => `<span class="tag genre">${g}</span>`).join('')}
+            </div>
+            <div class="book-price">${formatPrice(book.price)}</div>
+            <p class="book-desc">${book.description}</p>
+            <div class="book-why"><strong>Почему вам подойдет:</strong> ${book.why}</div>
+            <div class="book-actions">
+              <button class="btn btn-secondary btn-sm btn-detail" data-id="${book.id}">Подробнее</button>
+              <button class="btn btn-primary btn-sm btn-request" data-id="${book.id}">Оставить заявку</button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+
+      // Attach events
+      booksGrid.querySelectorAll('.btn-detail').forEach(btn => {
+        btn.addEventListener('click', () => openDetail(+btn.dataset.id));
+      });
+      booksGrid.querySelectorAll('.btn-request').forEach(btn => {
+        btn.addEventListener('click', () => openRequest(+btn.dataset.id));
+      });
+    }
+
+    function pluralBooks(n) {
+      if (n % 10 === 1 && n % 100 !== 11) return 'книга';
+      if ([2,3,4].includes(n % 10) && ![12,13,14].includes(n % 100)) return 'книги';
+      return 'книг';
+    }
+
+    // ========== MODALS ==========
+    function openDetail(id) {
+      const book = books.find(b => b.id === id) || results.find(b => b.id === id);
+      if (!book) return;
+      selectedBookId = id;
+
+      detailBody.innerHTML = `
+        ${renderCover(book, 'detail-cover', 'detail-cover-fallback')}
+        <h4 class="detail-title">${book.title}</h4>
+        <p class="detail-author">${book.author}</p>
+        <div class="detail-price">${formatPrice(book.price)}</div>
+        <div class="detail-meta">
+          ${book.genres.map(g => `<span class="tag genre">${g}</span>`).join('')}
+          ${book.ages.map(a => `<span class="tag">${a}</span>`).join('')}
+        </div>
+        <p class="detail-desc">${book.description}</p>
+        <p class="detail-rating">Рейтинг: <span>★ ${book.rating}</span> из 5</p>
+        <button class="btn btn-primary btn-block btn-request-from-detail" data-id="${book.id}">Оставить заявку</button>
+      `;
+
+      detailBody.querySelector('.btn-request-from-detail').addEventListener('click', () => {
+        closeModal('detailModal');
+        openRequest(id);
+      });
+
+      detailModal.classList.add('active');
+    }
+
+    function openRequest(id) {
+      const book = books.find(b => b.id === id) || results.find(b => b.id === id);
+      if (!book) return;
+      selectedBookId = id;
+
+      // Reset form
+      requestModalTitle.textContent = 'Оставить заявку';
+      requestBody.innerHTML = `
+        <form id="requestForm">
+          <div class="form-group">
+            <label for="reqName">Имя</label>
+            <input type="text" id="reqName" placeholder="Как к вам обращаться?" required>
+          </div>
+          <div class="form-group">
+            <label for="reqPhone">Телефон</label>
+            <input type="tel" id="reqPhone" placeholder="+7 (___) ___-__-__" required>
+          </div>
+          <div class="form-group">
+            <label for="reqBook">Выбранная книга</label>
+            <input type="text" id="reqBook" readonly value="${book.title}">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" style="margin-top:8px;">Отправить заявку</button>
+        </form>
+      `;
+
+      const form = document.getElementById('requestForm');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('reqName').value.trim();
+        const phone = document.getElementById('reqPhone').value.trim();
+        if (!name || !phone) return;
+
+        requestModalTitle.textContent = '';
+        requestBody.innerHTML = `
+          <div class="form-success">
+            <div class="form-success-icon">✓</div>
+            <h4>Спасибо! Заявка отправлена</h4>
+            <p>Менеджер свяжется с вами в ближайшее время.</p>
+            <button class="btn btn-primary" style="margin-top:20px;" data-close="requestModal">Закрыть</button>
+          </div>
+        `;
+        requestBody.querySelector('[data-close]').addEventListener('click', () => closeModal('requestModal'));
+      });
+
+      requestModal.classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // ========== EVENTS ==========
+    btnStart.addEventListener('click', () => {
+      currentStep = 0;
+      answers = { forWhom: null, genres: [], age: null, interests: [], budget: null };
+      showScreen('quiz');
+      renderStep();
+    });
+
+    btnBack.addEventListener('click', () => {
+      if (currentStep > 0) {
+        currentStep--;
+        renderStep();
+      }
+    });
+
+    btnNext.addEventListener('click', () => {
+      if (btnNext.disabled) return;
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        renderStep();
+      } else {
+        // Finish quiz
+        showScreen('loading');
+        setTimeout(() => {
+          calculateResults();
+          showScreen('results');
+          renderResults();
+        }, 1600);
+      }
+    });
+
+    btnRestart.addEventListener('click', () => {
+      currentStep = 0;
+      answers = { forWhom: null, genres: [], age: null, interests: [], budget: null };
+      showScreen('quiz');
+      renderStep();
+    });
+
+    sortSelect.addEventListener('change', renderResults);
+
+    document.querySelectorAll('[data-close]').forEach(el => {
+      el.addEventListener('click', () => closeModal(el.dataset.close));
+    });
+
+    // Close modal on overlay click
+    [detailModal, requestModal].forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal(modal.id);
+      });
+    });
+
+    // Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal('detailModal');
+        closeModal('requestModal');
+      }
+    });
+  </script>
+</body>
+</html>
