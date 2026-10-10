@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booksy — подбор книг</title>
+  <style>
+    :root {
+      --bg: #f6f4f2;
+      --surface: #ffffff;
+      --text: #1c1917;
+      --text-secondary: #57534e;
+      --accent: #7c2d3a;
+      --accent-hover: #5c1f2a;
+      --accent-light: #f5e6e9;
+      --border: #e7e5e4;
+      --shadow: 0 4px 20px rgba(28, 25, 23, 0.06);
+      --shadow-lg: 0 12px 40px rgba(28, 25, 23, 0.1);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+      padding: 40px 0 60px;
+      animation: fadeIn 0.4s ease;
+    }
+    .screen.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .progress-bar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    .progress-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .progress-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .progress-track {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    .brand {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .start-hero {
+      text-align: center;
+      padding: 80px 0 40px;
+    }
+    .start-hero h1 {
+      font-size: clamp(28px, 5vw, 42px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    .start-hero p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 520px;
+      margin: 0 auto 36px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(124, 45, 58, 0.35);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(124, 45, 58, 0.4);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 1.5px solid var(--accent);
+    }
+    .btn-outline:hover { background: var(--accent-light); }
+    .btn-sm { padding: 10px 18px; font-size: 14px; }
+    .btn-block { width: 100%; }
+
+    .start-info {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-top: 48px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .start-info-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--accent-light);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 22px;
+    }
+    .start-info h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .start-info p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 36px;
+      padding-top: 20px;
+    }
+    .quiz-header h2 {
+      font-size: clamp(22px, 4vw, 28px);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+    }
+    .quiz-header .hint {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    .options-grid.count-4 { grid-template-columns: repeat(4, 1fr); }
+    .options-grid.count-5 { grid-template-columns: repeat(5, 1fr); }
+    .options-grid.count-6 { grid-template-columns: repeat(3, 1fr); }
+
+    .option-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-align: center;
+      font-size: 15px;
+      font-weight: 500;
+      user-select: none;
+      position: relative;
+    }
+    .option-card:hover {
+      border-color: #c9a0a8;
+      background: #faf5f6;
+    }
+    .option-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent-hover);
+    }
+    .option-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .quiz-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .quiz-nav .btn { min-width: 140px; }
+
+    .loading-screen {
+      display: none;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 40px;
+    }
+    .loading-screen.active { display: flex; }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 24px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-screen p {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .results-header {
+      text-align: center;
+      margin-bottom: 28px;
+      padding-top: 12px;
+    }
+    .results-header h2 {
+      font-size: clamp(22px, 4vw, 28px);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .results-header p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .results-controls {
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .controls-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+    .controls-filters {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .control-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+    .control-field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .control-select {
+      width: 100%;
+      height: 44px;
+      padding: 0 36px 0 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--text);
+      background-color: var(--bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2357534e' d='M1.4 0L6 4.6 10.6 0 12 1.4 6 7.4 0 1.4z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 12px 8px;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .control-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124, 45, 58, 0.12);
+    }
+    .control-select:hover {
+      border-color: #c9a0a8;
+    }
+    .control-field-sort {
+      flex: 1;
+      max-width: 280px;
+    }
+    .controls-restart {
+      flex-shrink: 0;
+      height: 44px;
+      align-self: flex-end;
+    }
+
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .book-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: all var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+    .book-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-3px);
+    }
+
+    .book-cover-wrap {
+      position: relative;
+      height: 200px;
+      background: linear-gradient(135deg, #efe8e6 0%, #e0d4d2 100%);
+      overflow: hidden;
+    }
+    .book-cover {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .book-cover-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--accent-hover);
+      line-height: 1.3;
+    }
+    .match-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 10px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .theme-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(255,255,255,0.92);
+      color: var(--accent-hover);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 6px;
+      max-width: 55%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .book-body {
+      padding: 18px 20px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .book-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .book-author {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+    .book-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text-secondary);
+    }
+    .tag.theme {
+      background: var(--accent-light);
+      color: var(--accent-hover);
+    }
+    .book-price {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .book-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .book-why {
+      font-size: 13px;
+      background: #faf5f6;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      color: var(--accent-hover);
+      line-height: 1.4;
+    }
+    .book-why strong { font-weight: 600; }
+    .book-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .book-actions .btn { flex: 1; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(28, 25, 23, 0.45);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      max-width: 520px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px 0;
+    }
+    .modal-header h3 { font-size: 20px; font-weight: 700; }
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--bg);
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+    }
+    .modal-close:hover {
+      background: var(--border);
+      color: var(--text);
+    }
+    .modal-body { padding: 20px 24px 28px; }
+
+    .detail-cover {
+      width: 140px;
+      height: 200px;
+      border-radius: 8px;
+      object-fit: cover;
+      margin: 0 auto 20px;
+      display: block;
+      box-shadow: var(--shadow);
+      background: linear-gradient(135deg, #efe8e6, #e0d4d2);
+    }
+    .detail-cover-fallback {
+      width: 140px;
+      height: 200px;
+      border-radius: 8px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 16px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--accent-hover);
+      background: linear-gradient(135deg, #efe8e6, #e0d4d2);
+      box-shadow: var(--shadow);
+    }
+    .detail-title {
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .detail-author {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+    .detail-price {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .detail-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .detail-note {
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 20px;
+      line-height: 1.45;
+    }
+    .detail-rating {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+    .detail-rating span {
+      color: #c4a035;
+      font-weight: 600;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color var(--transition);
+      background: var(--bg);
+    }
+    .form-group input:focus { border-color: var(--accent); }
+    .form-group input[readonly] {
+      background: #f0efee;
+      color: var(--text-secondary);
+    }
+    .form-success {
+      text-align: center;
+      padding: 20px 0;
+    }
+    .form-success-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--accent-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 28px;
+      color: var(--accent);
+    }
+    .form-success h4 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .form-success p {
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .empty-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 800px) {
+      .controls-filters {
+        grid-template-columns: 1fr 1fr;
+      }
+      .controls-filters .control-field:last-child {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .options-grid.count-4,
+      .options-grid.count-5,
+      .options-grid.count-6 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .start-hero { padding: 50px 0 30px; }
+      .start-info {
+        flex-direction: column;
+        padding: 22px;
+      }
+      .options-grid,
+      .options-grid.count-4,
+      .options-grid.count-5,
+      .options-grid.count-6 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .options-grid .option-card:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+      }
+      .quiz-nav { flex-direction: column-reverse; }
+      .quiz-nav .btn { width: 100%; }
+      .controls-top {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .control-field-sort {
+        max-width: none;
+        width: 100%;
+      }
+      .controls-filters {
+        grid-template-columns: 1fr;
+      }
+      .controls-filters .control-field:last-child {
+        grid-column: auto;
+      }
+      .controls-restart {
+        width: 100%;
+        align-self: stretch;
+      }
+      .books-grid { grid-template-columns: 1fr; }
+      .book-actions { flex-direction: column; }
+    }
+
+    @media (max-width: 400px) {
+      .options-grid,
+      .options-grid.count-4,
+      .options-grid.count-5,
+      .options-grid.count-6 {
+        grid-template-columns: 1fr;
+      }
+      .options-grid .option-card:last-child:nth-child(odd) {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="progressBar" style="display:none;">
+    <div class="progress-inner">
+      <span class="progress-text" id="progressText">1 из 4</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:25%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- START -->
+  <section class="screen active" id="screenStart">
+    <div class="container">
+      <div class="start-hero">
+        <div class="brand">Booksy</div>
+        <h1>Подберём редкую книгу под ваш интерес</h1>
+        <p>Каталог исторически запрещённой и цензурированной литературы: антиутопии, диссидентская проза, политические тексты и свидетельства эпохи</p>
+        <button class="btn btn-primary" id="btnStart" style="font-size:17px;padding:16px 36px;">Начать подбор</button>
+      </div>
+      <div class="start-info">
+        <div class="start-info-icon">📖</div>
+        <div>
+          <h3>Не знаете, с чего начать?</h3>
+          <p>Ответьте на несколько вопросов о тематике, авторах, эпохе и бюджете — покажем подходящие издания из каталога.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="screen" id="screenQuiz">
+    <div class="container">
+      <div class="quiz-header">
+        <h2 id="quizTitle"></h2>
+        <p class="hint" id="quizHint"></p>
+      </div>
+      <div class="options-grid" id="optionsGrid"></div>
+      <div class="quiz-nav">
+        <button class="btn btn-secondary" id="btnBack">Назад</button>
+        <button class="btn btn-primary" id="btnNext">Далее</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOADING -->
+  <div class="loading-screen" id="screenLoading">
+    <div class="spinner"></div>
+    <p>Подбираем книги из каталога Booksy...</p>
+  </div>
+
+  <!-- RESULTS -->
+  <section class="screen" id="screenResults">
+    <div class="container">
+      <div class="results-header">
+        <div class="brand">Booksy</div>
+        <h2>Мы подобрали для вас</h2>
+        <p id="resultsCount"></p>
+      </div>
+      <div class="results-controls">
+        <div class="controls-top">
+          <div class="control-field control-field-sort">
+            <label for="sortSelect">Сортировка</label>
+            <select class="control-select" id="sortSelect">
+              <option value="match">По соответствию</option>
+              <option value="price-asc">Сначала дешевле</option>
+              <option value="price-desc">Сначала дороже</option>
+            </select>
+          </div>
+          <button class="btn btn-outline btn-sm controls-restart" id="btnRestart">Изменить параметры</button>
+        </div>
+        <div class="controls-filters">
+          <div class="control-field">
+            <label for="filterTheme">Тематика</label>
+            <select class="control-select" id="filterTheme">
+              <option value="all">Все</option>
+            </select>
+          </div>
+          <div class="control-field">
+            <label for="filterAuthor">Автор</label>
+            <select class="control-select" id="filterAuthor">
+              <option value="all">Все</option>
+            </select>
+          </div>
+          <div class="control-field">
+            <label for="filterPrice">Цена</label>
+            <select class="control-select" id="filterPrice">
+              <option value="all">Любая</option>
+              <option value="0-1000">До 1000 ₽</option>
+              <option value="1000-2000">1000–2000 ₽</option>
+              <option value="2000-3000">2000–3000 ₽</option>
+              <option value="3000+">От 3000 ₽</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="books-grid" id="booksGrid"></div>
+    </div>
+  </section>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>О книге</h3>
+        <button class="modal-close" data-close="detailModal">&times;</button>
+      </div>
+      <div class="modal-body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <!-- REQUEST MODAL -->
+  <div class="modal-overlay" id="requestModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="requestModalTitle">Уточнить наличие</h3>
+        <button class="modal-close" data-close="requestModal">&times;</button>
+      </div>
+      <div class="modal-body" id="requestBody"></div>
+    </div>
+  </div>
+
+  <script>
+    // ========== CATALOG ==========
+    // Исторически запрещённые / цензурированные издания.
+    // Описание отражает известный исторический контекст, без утверждений о текущем правовом статусе.
+    const books = [
+      {
+        id: 1,
+        title: "1984",
+        author: "Джордж Оруэлл",
+        themes: ["Антиутопия", "Политическая литература"],
+        eras: ["1920–1950", "Современные издания"],
+        authorsKey: ["Оруэлл"],
+        price: 720,
+        rating: 4.9,
+        description: "Роман о тоталитарном обществе, тотальной слежке и контроле над языком. Долгое время не издавался в СССР.",
+        note: "Исторически запрещался и изымался в ряде стран, включая СССР.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780451524935-L.jpg"
+      },
+      {
+        id: 2,
+        title: "Скотный двор",
+        author: "Джордж Оруэлл",
+        themes: ["Антиутопия", "Политическая литература"],
+        eras: ["1920–1950", "Современные издания"],
+        authorsKey: ["Оруэлл"],
+        price: 540,
+        rating: 4.8,
+        description: "Аллегория революции и тоталитаризма. В СССР книга десятилетиями не допускалась к открытой печати.",
+        note: "Классика политической сатиры; в советский период не издавалась.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780451526342-L.jpg"
+      },
+      {
+        id: 3,
+        title: "Мы",
+        author: "Евгений Замятин",
+        themes: ["Антиутопия", "Запрещённые авторы"],
+        eras: ["1920–1950", "Современные издания"],
+        authorsKey: ["Замятин"],
+        price: 680,
+        rating: 4.7,
+        description: "Один из первых романов-антиутопий XX века. В СССР полный текст долгое время не публиковался.",
+        note: "Написан в 1920-х; официально издан в СССР лишь спустя десятилетия.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780140185850-L.jpg"
+      },
+      {
+        id: 4,
+        title: "О дивный новый мир",
+        author: "Олдос Хаксли",
+        themes: ["Антиутопия", "Политическая литература"],
+        eras: ["1920–1950", "Современные издания"],
+        authorsKey: ["Хаксли"],
+        price: 710,
+        rating: 4.7,
+        description: "Антиутопия о обществе потребления, генетическом контроле и отказе от свободы ради комфорта.",
+        note: "В ряде стран подвергался цензуре и школьным запретам.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780060850524-L.jpg"
+      },
+      {
+        id: 5,
+        title: "451° по Фаренгейту",
+        author: "Рэй Брэдбери",
+        themes: ["Антиутопия"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Брэдбери"],
+        price: 650,
+        rating: 4.8,
+        description: "История общества, где книги сжигают, а свободная мысль считается опасной.",
+        note: "Сам роман неоднократно попадал в списки оспариваемых книг в школьных программах США.",
+        cover: "https://covers.openlibrary.org/b/isbn/9781451673319-L.jpg"
+      },
+      {
+        id: 6,
+        title: "Архипелаг ГУЛАГ",
+        author: "Александр Солженицын",
+        themes: ["Гулаг и репрессии", "Исторические свидетельства", "Политическая литература"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Солженицын"],
+        price: 1890,
+        rating: 4.9,
+        description: "Документально-художественное исследование системы лагерей. В СССР распространялся в самиздате.",
+        note: "В СССР публикация была запрещена; автор был выслан из страны.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780061253805-L.jpg"
+      },
+      {
+        id: 7,
+        title: "Один день Ивана Денисовича",
+        author: "Александр Солженицын",
+        themes: ["Гулаг и репрессии", "Диссидентская проза"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Солженицын"],
+        price: 520,
+        rating: 4.8,
+        description: "Повесть об одном дне заключённого советского лагеря. После хрущёвской оттепели снова ушла из открытой печати.",
+        note: "Впервые опубликована в 1962 году; позднее произведения автора снова цензурировались.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780374524647-L.jpg"
+      },
+      {
+        id: 8,
+        title: "В круге первом",
+        author: "Александр Солженицын",
+        themes: ["Гулаг и репрессии", "Диссидентская проза", "Запрещённые авторы"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Солженицын"],
+        price: 1240,
+        rating: 4.7,
+        description: "Роман о шарашке — особой тюрьме для учёных. В СССР не издавался до перестройки.",
+        note: "Долгое время распространялся только за рубежом и в самиздате.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780060652234-L.jpg"
+      },
+      {
+        id: 9,
+        title: "Раковый корпус",
+        author: "Александр Солженицын",
+        themes: ["Диссидентская проза", "Запрещённые авторы"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Солженицын"],
+        price: 980,
+        rating: 4.7,
+        description: "Роман о больных в онкологической больнице как метафора общества. Запрещён к печати в СССР.",
+        note: "Рукопись не прошла советскую цензуру; издавался за границей.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780374511999-L.jpg"
+      },
+      {
+        id: 10,
+        title: "Доктор Живаго",
+        author: "Борис Пастернак",
+        themes: ["Запрещённые авторы", "Диссидентская проза"],
+        eras: ["1920–1950", "1950–1980", "Современные издания"],
+        authorsKey: ["Пастернак"],
+        price: 890,
+        rating: 4.8,
+        description: "Роман о судьбе интеллигента на фоне революции и Гражданской войны. В СССР не издавался десятилетиями.",
+        note: "Впервые полностью опубликован за рубежом; автор подвергался травле после Нобелевской премии.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780679774389-L.jpg"
+      },
+      {
+        id: 11,
+        title: "Мастер и Маргарита",
+        author: "Михаил Булгаков",
+        themes: ["Запрещённые авторы", "Диссидентская проза"],
+        eras: ["1920–1950", "Современные издания"],
+        authorsKey: ["Булгаков"],
+        price: 760,
+        rating: 4.9,
+        description: "Философский роман о добре, зле и творчестве. Полный текст при жизни автора не публиковался.",
+        note: "В СССР полный вариант вышел только в конце 1960-х с купюрами.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780141180144-L.jpg"
+      },
+      {
+        id: 12,
+        title: "Колымские рассказы",
+        author: "Варлам Шаламов",
+        themes: ["Гулаг и репрессии", "Исторические свидетельства"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Шаламов"],
+        price: 920,
+        rating: 4.8,
+        description: "Цикл рассказов о лагерях Колымы. В СССР долгое время не издавался целиком.",
+        note: "Полное собрание вышло в открытую печать лишь в годы перестройки.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780140186956-L.jpg"
+      },
+      {
+        id: 13,
+        title: "Жизнь и судьба",
+        author: "Василий Гроссман",
+        themes: ["Политическая литература", "Исторические свидетельства", "Запрещённые авторы"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Гроссман"],
+        price: 1350,
+        rating: 4.8,
+        description: "Эпический роман о войне, тоталитаризме и человечности. Рукопись была арестована КГБ.",
+        note: "Рукопись конфисковали; роман впервые издан за границей.",
+        cover: "https://covers.openlibrary.org/b/isbn/9781590170106-L.jpg"
+      },
+      {
+        id: 14,
+        title: "Всё течёт",
+        author: "Василий Гроссман",
+        themes: ["Политическая литература", "Диссидентская проза"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Гроссман"],
+        price: 610,
+        rating: 4.6,
+        description: "Повесть о возвращении из лагеря и природе несвободы. В СССР не публиковалась.",
+        note: "Распространялась в самиздате; официально издана позже.",
+        cover: "https://covers.openlibrary.org/b/isbn/9781590173282-L.jpg"
+      },
+      {
+        id: 15,
+        title: "Тёмный полдень",
+        author: "Артур Кёстлер",
+        themes: ["Политическая литература", "Антиутопия"],
+        eras: ["1920–1950", "Современные издания"],
+        authorsKey: ["Кёстлер"],
+        price: 690,
+        rating: 4.6,
+        description: "Роман о логике показательных процессов и ломании человека системой. Важный текст для понимания тоталитаризма.",
+        note: "В странах соцлагеря книга долгое время не издавалась.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780099428381-L.jpg"
+      },
+      {
+        id: 16,
+        title: "Повесть о пережитом",
+        author: "Евгения Гинзбург",
+        themes: ["Гулаг и репрессии", "Исторические свидетельства"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Гинзбург"],
+        price: 840,
+        rating: 4.7,
+        description: "Мемуары о аресте, лагерях и возвращении. Один из ключевых документов эпохи репрессий.",
+        note: "В СССР полный текст долго не допускался к печати.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780156027519-L.jpg"
+      },
+      {
+        id: 17,
+        title: "Воспоминания",
+        author: "Надежда Мандельштам",
+        themes: ["Исторические свидетельства", "Запрещённые авторы"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Мандельштам"],
+        price: 1100,
+        rating: 4.7,
+        description: "Свидетельство о судьбе Осипа Мандельштама и жизни интеллигенции при Сталине.",
+        note: "Издавались за рубежом; в СССР — после снятия цензурных ограничений.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780879231866-L.jpg"
+      },
+      {
+        id: 18,
+        title: "Реквием",
+        author: "Анна Ахматова",
+        themes: ["Запрещённые авторы", "Исторические свидетельства"],
+        eras: ["1920–1950", "Современные издания"],
+        authorsKey: ["Ахматова"],
+        price: 480,
+        rating: 4.9,
+        description: "Поэма о годах Большого террора. Долгое время существовала только в устной передаче и списках.",
+        note: "Полностью опубликована в СССР лишь в конце 1980-х.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780904613872-L.jpg"
+      },
+      {
+        id: 19,
+        title: "Порабощённый разум",
+        author: "Чеслав Милош",
+        themes: ["Политическая литература", "Диссидентская проза"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Милош"],
+        price: 870,
+        rating: 4.5,
+        description: "Эссе о приспособлении интеллектуалов к тоталитарной идеологии в Восточной Европе.",
+        note: "Важный текст диссидентской мысли; в соцстранах распространялся ограниченно.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780679728566-L.jpg"
+      },
+      {
+        id: 20,
+        title: "Колымские тетради",
+        author: "Варлам Шаламов",
+        themes: ["Гулаг и репрессии", "Исторические свидетельства"],
+        eras: ["1950–1980", "Современные издания"],
+        authorsKey: ["Шаламов"],
+        price: 1050,
+        rating: 4.6,
+        description: "Стихотворные циклы, созданные после лагерного опыта. Дополняют прозу Шаламова.",
+        note: "Полные издания стали доступны читателю значительно позже написания.",
+        cover: "https://covers.openlibrary.org/b/isbn/9781784781019-L.jpg"
+      },
+      {
+        id: 21,
+        title: "В круге последнем",
+        author: "Александр Солженицын",
+        themes: ["Политическая литература", "Диссидентская проза"],
+        eras: ["1980–2000", "Современные издания"],
+        authorsKey: ["Солженицын"],
+        price: 1420,
+        rating: 4.5,
+        description: "Публицистика и размышления о России, власти и нравственном выборе (сборник поздних текстов в современных изданиях).",
+        note: "Часть текстов долгое время была доступна лишь эмигрантским издательствам.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780374528607-L.jpg"
+      },
+      {
+        id: 22,
+        title: "Записки из Мёртвого дома",
+        author: "Фёдор Достоевский",
+        themes: ["Исторические свидетельства", "Политическая литература"],
+        eras: ["Современные издания"],
+        authorsKey: ["Достоевский"],
+        price: 590,
+        rating: 4.8,
+        description: "Художественно-документальный рассказ о каторге. Важный прецедент «лагерной» литературы в русской традиции.",
+        note: "Классика; в каталоге — как исторический контекст к теме несвободы.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780140444568-L.jpg"
+      },
+      {
+        id: 23,
+        title: "Приглашение на казнь",
+        author: "Владимир Набоков",
+        themes: ["Антиутопия", "Запрещённые авторы"],
+        eras: ["1920–1950", "Современные издания"],
+        authorsKey: ["Набоков"],
+        price: 730,
+        rating: 4.6,
+        description: "Сюрреалистический роман о приговорённом к смерти в абсурдном государстве. В СССР не издавался.",
+        note: "Произведения Набокова в советский период почти не публиковались.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780679725312-L.jpg"
+      },
+      {
+        id: 24,
+        title: "Повесть непогашенной луны",
+        author: "Борис Пильняк",
+        themes: ["Политическая литература", "Запрещённые авторы"],
+        eras: ["1920–1950", "Современные издания"],
+        authorsKey: ["Пильняк"],
+        price: 560,
+        rating: 4.4,
+        description: "Повесть, вызвавшая скандал из‑за аллюзий на смерть Фрунзе. Автор позднее был репрессирован.",
+        note: "Текст изымался из обращения; судьба автора трагична.",
+        cover: "https://covers.openlibrary.org/b/isbn/9780875010557-L.jpg"
+      }
+    ];
+
+    // ========== QUIZ ==========
+    const steps = [
+      {
+        title: "Какая тематика интересует?",
+        hint: "Можно выбрать несколько",
+        multi: true,
+        key: "themes",
+        options: [
+          { value: "Антиутопия", label: "Антиутопия" },
+          { value: "Политическая литература", label: "Политическая литература" },
+          { value: "Гулаг и репрессии", label: "Гулаг и репрессии" },
+          { value: "Запрещённые авторы", label: "Запрещённые авторы" },
+          { value: "Исторические свидетельства", label: "Исторические свидетельства" },
+          { value: "Диссидентская проза", label: "Диссидентская проза" }
+        ]
+      },
+      {
+        title: "Каких авторов хотите увидеть?",
+        hint: "Можно выбрать несколько или «Любые»",
+        multi: true,
+        key: "authors",
+        options: [
+          { value: "Оруэлл", label: "Оруэлл" },
+          { value: "Солженицын", label: "Солженицын" },
+          { value: "Замятин", label: "Замятин" },
+          { value: "Пастернак", label: "Пастернак" },
+          { value: "Шаламов", label: "Шаламов" },
+          { value: "Гроссман", label: "Гроссман" },
+          { value: "Булгаков", label: "Булгаков" },
+          { value: "any", label: "Любые" }
+        ]
+      },
+      {
+        title: "Какая эпоха ближе?",
+        hint: "Выберите один вариант",
+        multi: false,
+        key: "era",
+        options: [
+          { value: "1920–1950", label: "1920–1950" },
+          { value: "1950–1980", label: "1950–1980" },
+          { value: "1980–2000", label: "1980–2000" },
+          { value: "Современные издания", label: "Современные издания" }
+        ]
+      },
+      {
+        title: "Какой бюджет?",
+        hint: "Выберите один вариант",
+        multi: false,
+        key: "budget",
+        options: [
+          { value: "0-1000", label: "До 1000 ₽" },
+          { value: "1000-2000", label: "1000–2000 ₽" },
+          { value: "2000-3000", label: "2000–3000 ₽" },
+          { value: "3000+", label: "От 3000 ₽" }
+        ]
+      }
+    ];
+
+    // ========== STATE ==========
+    let currentStep = 0;
+    let answers = {
+      themes: [],
+      authors: [],
+      era: null,
+      budget: null
+    };
+    let results = [];
+    let selectedBookId = null;
+    let filterTheme = 'all';
+    let filterAuthor = 'all';
+    let filterPrice = 'all';
+
+    // ========== DOM ==========
+    const screenStart = document.getElementById('screenStart');
+    const screenQuiz = document.getElementById('screenQuiz');
+    const screenLoading = document.getElementById('screenLoading');
+    const screenResults = document.getElementById('screenResults');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+    const quizTitle = document.getElementById('quizTitle');
+    const quizHint = document.getElementById('quizHint');
+    const optionsGrid = document.getElementById('optionsGrid');
+    const btnStart = document.getElementById('btnStart');
+    const btnBack = document.getElementById('btnBack');
+    const btnNext = document.getElementById('btnNext');
+    const btnRestart = document.getElementById('btnRestart');
+    const booksGrid = document.getElementById('booksGrid');
+    const sortSelect = document.getElementById('sortSelect');
+    const filterThemeEl = document.getElementById('filterTheme');
+    const filterAuthorEl = document.getElementById('filterAuthor');
+    const filterPriceEl = document.getElementById('filterPrice');
+    const resultsCount = document.getElementById('resultsCount');
+    const detailModal = document.getElementById('detailModal');
+    const detailBody = document.getElementById('detailBody');
+    const requestModal = document.getElementById('requestModal');
+    const requestBody = document.getElementById('requestBody');
+    const requestModalTitle = document.getElementById('requestModalTitle');
+
+    function showScreen(name) {
+      screenStart.classList.remove('active');
+      screenQuiz.classList.remove('active');
+      screenLoading.classList.remove('active');
+      screenResults.classList.remove('active');
+      progressBar.style.display = 'none';
+
+      if (name === 'start') screenStart.classList.add('active');
+      else if (name === 'quiz') {
+        screenQuiz.classList.add('active');
+        progressBar.style.display = 'block';
+      } else if (name === 'loading') screenLoading.classList.add('active');
+      else if (name === 'results') screenResults.classList.add('active');
+    }
+
+    function updateProgress() {
+      const total = steps.length;
+      const current = currentStep + 1;
+      progressText.textContent = current + ' из ' + total;
+      progressFill.style.width = ((current / total) * 100) + '%';
+    }
+
+    function renderStep() {
+      const step = steps[currentStep];
+      quizTitle.textContent = step.title;
+      quizHint.textContent = step.hint;
+      optionsGrid.innerHTML = '';
+      optionsGrid.className = 'options-grid count-' + step.options.length;
+
+      step.options.forEach(function(opt) {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.textContent = opt.label;
+        card.dataset.value = opt.value;
+
+        const selected = step.multi
+          ? answers[step.key].indexOf(opt.value) > -1
+          : answers[step.key] === opt.value;
+        if (selected) card.classList.add('selected');
+
+        card.addEventListener('click', function() {
+          if (step.multi) {
+            // «Любые» сбрасывает остальных и наоборот
+            if (opt.value === 'any') {
+              answers[step.key] = answers[step.key].indexOf('any') > -1 ? [] : ['any'];
+              optionsGrid.querySelectorAll('.option-card').forEach(function(c) {
+                c.classList.toggle('selected', answers[step.key].indexOf(c.dataset.value) > -1);
+              });
+            } else {
+              answers[step.key] = answers[step.key].filter(function(v) { return v !== 'any'; });
+              const idx = answers[step.key].indexOf(opt.value);
+              if (idx > -1) answers[step.key].splice(idx, 1);
+              else answers[step.key].push(opt.value);
+              optionsGrid.querySelectorAll('.option-card').forEach(function(c) {
+                c.classList.toggle('selected', answers[step.key].indexOf(c.dataset.value) > -1);
+              });
+            }
+          } else {
+            answers[step.key] = opt.value;
+            optionsGrid.querySelectorAll('.option-card').forEach(function(c) { c.classList.remove('selected'); });
+            card.classList.add('selected');
+          }
+          updateNextBtn();
+        });
+
+        optionsGrid.appendChild(card);
+      });
+
+      btnBack.style.visibility = 'visible';
+      btnNext.textContent = currentStep === steps.length - 1 ? 'Подобрать книги' : 'Далее';
+      updateNextBtn();
+      updateProgress();
+    }
+
+    function updateNextBtn() {
+      const step = steps[currentStep];
+      var valid = step.multi ? answers[step.key].length > 0 : answers[step.key] !== null;
+      btnNext.disabled = !valid;
+      btnNext.style.opacity = valid ? '1' : '0.5';
+      btnNext.style.cursor = valid ? 'pointer' : 'not-allowed';
+    }
+
+    // ========== SCORING ==========
+    function scoreBook(book) {
+      var score = 0;
+      var reasons = [];
+
+      // Themes (up to 35)
+      if (answers.themes.length > 0) {
+        var themeMatches = book.themes.filter(function(t) { return answers.themes.indexOf(t) > -1; });
+        if (themeMatches.length > 0) {
+          score += Math.min(35, themeMatches.length * 14 + 7);
+          reasons.push('тематика «' + themeMatches.slice(0, 2).join(', ') + '»');
+        }
+      } else {
+        score += 8;
+      }
+
+      // Authors (up to 30)
+      var wantAnyAuthor = answers.authors.indexOf('any') > -1 || answers.authors.length === 0;
+      if (wantAnyAuthor) {
+        score += 12;
+      } else {
+        var authorMatch = book.authorsKey.some(function(a) { return answers.authors.indexOf(a) > -1; });
+        if (authorMatch) {
+          score += 30;
+          reasons.push('автор ' + book.author);
+        }
+      }
+
+      // Era (up to 20)
+      if (answers.era && book.eras.indexOf(answers.era) > -1) {
+        score += 20;
+        reasons.push('эпоха ' + answers.era);
+      } else if (answers.era) {
+        score += 4;
+      }
+
+      // Budget (up to 15)
+      if (answers.budget) {
+        var inBudget = false;
+        if (answers.budget === '3000+') {
+          if (book.price >= 3000) { score += 15; inBudget = true; }
+          else if (book.price >= 2000) score += 7;
+        } else {
+          var parts = answers.budget.split('-');
+          var min = parseInt(parts[0], 10) || 0;
+          var max = parseInt(parts[1], 10) || 99999;
+          if (book.price >= min && book.price <= max) {
+            score += 15;
+            inBudget = true;
+          } else if (book.price < min && book.price >= min - 400) score += 7;
+          else if (book.price > max && book.price <= max + 500) score += 5;
+        }
+        if (inBudget) reasons.push('ваш бюджет');
+      }
+
+      score += (book.rating - 4) * 4;
+      score = Math.min(98, Math.max(32, Math.round(score)));
+
+      var why = reasons.length
+        ? 'Совпадает: ' + reasons.slice(0, 3).join(', ') + '.'
+        : 'Сильный текст по рейтингу и историческому значению.';
+
+      return { score: score, why: why };
+    }
+
+    function calculateResults() {
+      var scored = books.map(function(book) {
+        var r = scoreBook(book);
+        return Object.assign({}, book, { match: r.score, why: r.why });
+      });
+      scored.sort(function(a, b) { return b.match - a.match; });
+      var filtered = scored.filter(function(b) { return b.match >= 42; });
+      if (filtered.length < 3) filtered = scored.slice(0, 5);
+      else if (filtered.length > 8) filtered = filtered.slice(0, 8);
+      results = filtered;
+      populateFilters();
+    }
+
+    function populateFilters() {
+      var themes = {};
+      var authors = {};
+      results.forEach(function(b) {
+        b.themes.forEach(function(t) { themes[t] = true; });
+        authors[b.author] = true;
+      });
+      filterThemeEl.innerHTML = '<option value="all">Все</option>' +
+        Object.keys(themes).sort().map(function(t) {
+          return '<option value="' + t + '">' + t + '</option>';
+        }).join('');
+      filterAuthorEl.innerHTML = '<option value="all">Все</option>' +
+        Object.keys(authors).sort().map(function(a) {
+          return '<option value="' + a + '">' + a + '</option>';
+        }).join('');
+      filterTheme = 'all';
+      filterAuthor = 'all';
+      filterPrice = 'all';
+      filterThemeEl.value = 'all';
+      filterAuthorEl.value = 'all';
+      filterPriceEl.value = 'all';
+    }
+
+    function priceInFilter(price, filter) {
+      if (filter === 'all') return true;
+      if (filter === '3000+') return price >= 3000;
+      var parts = filter.split('-');
+      var min = parseInt(parts[0], 10) || 0;
+      var max = parseInt(parts[1], 10) || 99999;
+      return price >= min && price <= max;
+    }
+
+    function formatPrice(p) {
+      return p.toLocaleString('ru-RU') + ' ₽';
+    }
+
+    function pluralBooks(n) {
+      if (n % 10 === 1 && n % 100 !== 11) return 'книга';
+      if ([2, 3, 4].indexOf(n % 10) > -1 && [12, 13, 14].indexOf(n % 100) === -1) return 'книги';
+      return 'книг';
+    }
+
+    function renderCover(book, imgClass, fallbackClass) {
+      if (book.cover) {
+        return '<img class="' + imgClass + '" src="' + book.cover + '" alt="' + book.title + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';">' +
+          '<div class="' + fallbackClass + '" style="display:none;">' + book.title + '</div>';
+      }
+      return '<div class="' + fallbackClass + '">' + book.title + '</div>';
+    }
+
+    function getVisibleResults() {
+      var list = results.filter(function(b) {
+        if (filterTheme !== 'all' && b.themes.indexOf(filterTheme) === -1) return false;
+        if (filterAuthor !== 'all' && b.author !== filterAuthor) return false;
+        if (!priceInFilter(b.price, filterPrice)) return false;
+        return true;
+      });
+      var sortVal = sortSelect.value;
+      if (sortVal === 'price-asc') list.sort(function(a, b) { return a.price - b.price; });
+      else if (sortVal === 'price-desc') list.sort(function(a, b) { return b.price - a.price; });
+      else list.sort(function(a, b) { return b.match - a.match; });
+      return list;
+    }
+
+    function renderResults() {
+      var sorted = getVisibleResults();
+      resultsCount.textContent = sorted.length
+        ? 'Найдено ' + sorted.length + ' ' + pluralBooks(sorted.length)
+        : 'По выбранным фильтрам ничего не найдено';
+
+      if (!sorted.length) {
+        booksGrid.innerHTML = '<div class="empty-results">Измените фильтры или параметры подбора</div>';
+        return;
+      }
+
+      booksGrid.innerHTML = sorted.map(function(book) {
+        return '<article class="book-card" data-id="' + book.id + '">' +
+          '<div class="book-cover-wrap">' +
+            renderCover(book, 'book-cover', 'book-cover-fallback') +
+            '<span class="theme-badge">' + book.themes[0] + '</span>' +
+            '<span class="match-badge">Подходит на ' + book.match + '%</span>' +
+          '</div>' +
+          '<div class="book-body">' +
+            '<h3 class="book-title">' + book.title + '</h3>' +
+            '<p class="book-author">' + book.author + '</p>' +
+            '<div class="book-meta">' +
+              book.themes.map(function(t) { return '<span class="tag theme">' + t + '</span>'; }).join('') +
+            '</div>' +
+            '<div class="book-price">' + formatPrice(book.price) + '</div>' +
+            '<p class="book-desc">' + book.description + '</p>' +
+            '<div class="book-why"><strong>Почему вам подойдёт:</strong> ' + book.why + '</div>' +
+            '<div class="book-actions">' +
+              '<button class="btn btn-secondary btn-sm btn-detail" data-id="' + book.id + '">Подробнее</button>' +
+              '<button class="btn btn-primary btn-sm btn-request" data-id="' + book.id + '">Уточнить наличие</button>' +
+            '</div>' +
+          '</div>' +
+        '</article>';
+      }).join('');
+
+      booksGrid.querySelectorAll('.btn-detail').forEach(function(btn) {
+        btn.addEventListener('click', function() { openDetail(+btn.dataset.id); });
+      });
+      booksGrid.querySelectorAll('.btn-request').forEach(function(btn) {
+        btn.addEventListener('click', function() { openRequest(+btn.dataset.id); });
+      });
+    }
+
+    function findBook(id) {
+      return results.find(function(b) { return b.id === id; }) || books.find(function(b) { return b.id === id; });
+    }
+
+    function openDetail(id) {
+      var book = findBook(id);
+      if (!book) return;
+      selectedBookId = id;
+      detailBody.innerHTML =
+        renderCover(book, 'detail-cover', 'detail-cover-fallback') +
+        '<h4 class="detail-title">' + book.title + '</h4>' +
+        '<p class="detail-author">' + book.author + '</p>' +
+        '<div class="detail-price">' + formatPrice(book.price) + '</div>' +
+        '<div class="detail-meta">' +
+          book.themes.map(function(t) { return '<span class="tag theme">' + t + '</span>'; }).join('') +
+          book.eras.map(function(e) { return '<span class="tag">' + e + '</span>'; }).join('') +
+        '</div>' +
+        '<p class="detail-desc">' + book.description + '</p>' +
+        (book.note ? '<div class="detail-note">' + book.note + '</div>' : '') +
+        '<p class="detail-rating">Рейтинг читателей: <span>★ ' + book.rating + '</span> из 5</p>' +
+        '<button class="btn btn-primary btn-block btn-request-from-detail" data-id="' + book.id + '">Уточнить наличие / Заказать</button>';
+
+      detailBody.querySelector('.btn-request-from-detail').addEventListener('click', function() {
+        closeModal('detailModal');
+        openRequest(id);
+      });
+      detailModal.classList.add('active');
+    }
+
+    function openRequest(id) {
+      var book = findBook(id);
+      if (!book) return;
+      selectedBookId = id;
+      requestModalTitle.textContent = 'Уточнить наличие';
+      requestBody.innerHTML =
+        '<form id="requestForm">' +
+          '<div class="form-group"><label for="reqName">Имя</label>' +
+          '<input type="text" id="reqName" placeholder="Как к вам обращаться?" required></div>' +
+          '<div class="form-group"><label for="reqPhone">Телефон</label>' +
+          '<input type="tel" id="reqPhone" placeholder="+7 (___) ___-__-__" required></div>' +
+          '<div class="form-group"><label for="reqBook">Выбранная книга</label>' +
+          '<input type="text" id="reqBook" readonly value="' + book.title + ' — ' + book.author + '"></div>' +
+          '<button type="submit" class="btn btn-primary btn-block" style="margin-top:8px;">Отправить запрос</button>' +
+        '</form>';
+
+      document.getElementById('requestForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var name = document.getElementById('reqName').value.trim();
+        var phone = document.getElementById('reqPhone').value.trim();
+        if (!name || !phone) return;
+        requestModalTitle.textContent = '';
+        requestBody.innerHTML =
+          '<div class="form-success">' +
+            '<div class="form-success-icon">✓</div>' +
+            '<h4>Спасибо! Запрос отправлен</h4>' +
+            '<p>Менеджер Booksy уточнит наличие и свяжется с вами в ближайшее время.</p>' +
+            '<button class="btn btn-primary" style="margin-top:20px;" data-close="requestModal">Закрыть</button>' +
+          '</div>';
+        requestBody.querySelector('[data-close]').addEventListener('click', function() {
+          closeModal('requestModal');
+        });
+      });
+      requestModal.classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // ========== EVENTS ==========
+    btnStart.addEventListener('click', function() {
+      currentStep = 0;
+      answers = { themes: [], authors: [], era: null, budget: null };
+      showScreen('quiz');
+      renderStep();
+    });
+
+    btnBack.addEventListener('click', function() {
+      if (currentStep > 0) {
+        currentStep--;
+        renderStep();
+      } else {
+        showScreen('start');
+      }
+    });
+
+    btnNext.addEventListener('click', function() {
+      if (btnNext.disabled) return;
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        renderStep();
+      } else {
+        showScreen('loading');
+        setTimeout(function() {
+          calculateResults();
+          showScreen('results');
+          renderResults();
+        }, 1500);
+      }
+    });
+
+    btnRestart.addEventListener('click', function() {
+      currentStep = 0;
+      answers = { themes: [], authors: [], era: null, budget: null };
+      showScreen('quiz');
+      renderStep();
+    });
+
+    sortSelect.addEventListener('change', renderResults);
+    filterThemeEl.addEventListener('change', function() {
+      filterTheme = filterThemeEl.value;
+      renderResults();
+    });
+    filterAuthorEl.addEventListener('change', function() {
+      filterAuthor = filterAuthorEl.value;
+      renderResults();
+    });
+    filterPriceEl.addEventListener('change', function() {
+      filterPrice = filterPriceEl.value;
+      renderResults();
+    });
+
+    document.querySelectorAll('[data-close]').forEach(function(el) {
+      el.addEventListener('click', function() { closeModal(el.dataset.close); });
+    });
+    [detailModal, requestModal].forEach(function(modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) closeModal(modal.id);
+      });
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeModal('detailModal');
+        closeModal('requestModal');
+      }
+    });
+  </script>
+</body>
+</html>
